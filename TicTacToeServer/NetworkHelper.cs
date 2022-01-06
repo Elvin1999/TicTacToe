@@ -124,7 +124,7 @@ namespace TicTacToeServer
             else if (number >= 3 && number <= 5)
                 Points[1, number - 3] = symbol;
             else if (number >= 6 && number <= 8)
-                Points[2, number - 3] = symbol;
+                Points[2, number - 6] = symbol;
 
 
             for (int i = 0; i < 3; i++)
