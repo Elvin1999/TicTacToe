@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace TicTacToeServer
     {
         private static readonly Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         private static readonly List<Socket> clientSockets = new List<Socket>();
-        private const int BUFFER_SIZE = 2048;
+        private const int BUFFER_SIZE = 1000000;
         private const int PORT = 27001;
         private static readonly byte[] buffer = new byte[BUFFER_SIZE];
 
@@ -83,11 +84,30 @@ namespace TicTacToeServer
             }
 
             clientSockets.Add(socket);
+
+            if (!IsFirst)
+            {
+                IsFirst = true;
+                string t = "X";
+                byte[] data = Encoding.ASCII.GetBytes(t);
+                socket.Send(data);
+            }
+            else
+            {
+                IsFirst = false;
+                string t = "O";
+                byte[] data = Encoding.ASCII.GetBytes(t);
+                socket.Send(data);
+            }
+
+
             socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
             Console.WriteLine("Client connected, waiting for request...");
             serverSocket.BeginAccept(AcceptCallback, null);
         }
+        static public bool IsFirst { get; set; } = false;
         static char[,] Points = new char[3, 3] { { '1', '2', '3' }, { '4', '5', '6' }, { '7', '8', '9' } };
+        public static PlayerObj PlayerObj { get; set; } = new PlayerObj();
         private static void ReceiveCallback(IAsyncResult AR)
         {
             Socket current = (Socket)AR.AsyncState;
@@ -109,22 +129,57 @@ namespace TicTacToeServer
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
             string text = Encoding.ASCII.GetString(recBuf);
+            if (PlayerObj.Image1 == null || PlayerObj.Image2 == null)
+            {
+                var path = ImageHelper.GetImagePath(recBuf);
+                if (IsFirst)
+                {
+                    PlayerObj.Image1 = path;
+                }
+                else
+                {
+                    PlayerObj.Image2 = path;
+                }
+                if (PlayerObj.Image1 != null && PlayerObj.Image2 != null)
+                {
+                    var bytes1 = ImageHelper.GetBytesOfImage(PlayerObj.Image1);
+                    var bytes2 = ImageHelper.GetBytesOfImage(PlayerObj.Image2);
+                    var obj = new ImageObjects
+                    {
+                        Image1Bytes = bytes1,
+                        Image2Bytes = bytes2
+                    };
+                    var jsonString = JsonConvert.SerializeObject(obj);
+
+                    foreach (var socket in clientSockets)
+                    {
+                        byte[] data = Encoding.ASCII.GetBytes(jsonString);
+                        socket.Send(data);
+                    }
+                    PlayerObj = new PlayerObj();
+                }
+            }
 
 
 
 
-
-            //
-            Console.WriteLine("Received Text: " + text);
-            var no = text[0];
-            var symbol = text[1];
-            var number = Convert.ToInt32(no) - 49;
-            if (number >= 0 && number <= 2)
-                Points[0, number] = symbol;
-            else if (number >= 3 && number <= 5)
-                Points[1, number - 3] = symbol;
-            else if (number >= 6 && number <= 8)
-                Points[2, number - 6] = symbol;
+            //Console.WriteLine("Received Text: " + text);
+            try
+            {
+                var no = text[0];
+                var symbol = text[1];
+                var number = Convert.ToInt32(no) - 49;
+                if (number >= 0 && number <= 2)
+                    Points[0, number] = symbol;
+                else if (number >= 3 && number <= 5)
+                    Points[1, number - 3] = symbol;
+                else if (number >= 6 && number <= 8)
+                    Points[2, number - 6] = symbol;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine(recBuf.Length);
+            }
 
 
             for (int i = 0; i < 3; i++)
