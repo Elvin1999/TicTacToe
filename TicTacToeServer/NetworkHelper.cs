@@ -129,36 +129,36 @@ namespace TicTacToeServer
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
             string text = Encoding.ASCII.GetString(recBuf);
-            if (PlayerObj.Image1 == null || PlayerObj.Image2 == null)
-            {
-                var path = ImageHelper.GetImagePath(recBuf);
-                if (IsFirst)
-                {
-                    PlayerObj.Image1 = path;
-                }
-                else
-                {
-                    PlayerObj.Image2 = path;
-                }
-                if (PlayerObj.Image1 != null && PlayerObj.Image2 != null)
-                {
-                    var bytes1 = ImageHelper.GetBytesOfImage(PlayerObj.Image1);
-                    var bytes2 = ImageHelper.GetBytesOfImage(PlayerObj.Image2);
-                    var obj = new ImageObjects
-                    {
-                        Image1Bytes = bytes1,
-                        Image2Bytes = bytes2
-                    };
-                    var jsonString = JsonConvert.SerializeObject(obj);
+            //if (PlayerObj.Image1 == null || PlayerObj.Image2 == null)
+            //{
+            //    var path = ImageHelper.GetImagePath(recBuf);
+            //    if (IsFirst)
+            //    {
+            //        PlayerObj.Image1 = path;
+            //    }
+            //    else
+            //    {
+            //        PlayerObj.Image2 = path;
+            //    }
+            //    if (PlayerObj.Image1 != null && PlayerObj.Image2 != null)
+            //    {
+            //        var bytes1 = ImageHelper.GetBytesOfImage(PlayerObj.Image1);
+            //        var bytes2 = ImageHelper.GetBytesOfImage(PlayerObj.Image2);
+            //        var obj = new ImageObjects
+            //        {
+            //            Image1Bytes = bytes1,
+            //            Image2Bytes = bytes2
+            //        };
+            //        var jsonString = JsonConvert.SerializeObject(obj);
 
-                    foreach (var socket in clientSockets)
-                    {
-                        byte[] data = Encoding.ASCII.GetBytes(jsonString);
-                        socket.Send(data);
-                    }
-                    PlayerObj = new PlayerObj();
-                }
-            }
+            //        foreach (var socket in clientSockets)
+            //        {
+            //            byte[] data = Encoding.ASCII.GetBytes(jsonString);
+            //            socket.Send(data);
+            //        }
+            //        PlayerObj = new PlayerObj();
+            //    }
+            //}
 
 
 
